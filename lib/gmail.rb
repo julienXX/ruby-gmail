@@ -52,7 +52,7 @@ class Gmail
   def create_label(name)
     imap.create(name)
   end
-
+  # Get labels list
   def labels
     labels = Array.new
     @imap.list("", "%").each do |label|
