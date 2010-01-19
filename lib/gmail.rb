@@ -57,7 +57,7 @@ class Gmail
     labels = Array.new
     imap_lists = @imap.list("", "%") + @imap.list("[Gmail]/", "%")
     imap_lists.each do |label|
-      label[:name].each { |l| labels << l }
+      label[:name].each_line { |l| labels << l }
     end
     return labels
   end
