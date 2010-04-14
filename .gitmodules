@@ -1,0 +1,3 @@
+[submodule "ruby-gmail"]
+	path = ruby-gmail
+	url = git@github.com:julienXX/ruby-gmail.git
