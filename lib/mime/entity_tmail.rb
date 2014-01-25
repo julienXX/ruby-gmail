@@ -1,4 +1,4 @@
-require 'tmail'
+require 'mail'
 require 'ietf/rfc2045'
 String::ALPHANUMERIC_CHARACTERS = ('a'..'z').to_a + ('A'..'Z').to_a unless defined? String::ALPHANUMERIC_CHARACTERS
 def String.random(size)
@@ -18,11 +18,11 @@ module MIME
         @encoding = 'quoted-printable' unless encoding
       elsif one.is_a?(String) # Intent is to parse a message body
         @raw = one.gsub(/\r/,'').gsub(/\n/, "\r\n") # normalizes end-of-line characters
-        @tmail = TMail::Mail.parse(@raw)
+        @mail = Mail::Mail.parse(@raw)
         from_tmail(@tmail)
       elsif one.is_a?(TMail::Mail)
-        @tmail = one
-        from_tmail(@tmail)
+        @mail = one
+        from_tmail(@mail)
       end
     end
 
@@ -58,13 +58,13 @@ module MIME
       end
       raise ArgumentError, "Must pass in either: [an array with two elements: headers(hash) and content(string or array)] OR [a hash containing :type, :boundary, and :content(being the former or a string)]"
     end
-    def from_tmail(tmail)
-      raise ArgumentError, "Expecting a TMail::Mail object." unless tmail.is_a?(TMail::Mail)
-      @headers ||= Hash.new {|h,k| @tmail.header[k].to_s }
+    def from_mail(mail)
+      raise ArgumentError, "Expecting a Mail::Mail object." unless mail.is_a?(Mail::Mail)
+      @headers ||= Hash.new {|h,k| @mail.header[k].to_s }
       if multipart?
-        @content = @tmail.parts.collect { |tpart| Entity.new.from_tmail(tpart) }
+        @content = @mail.parts.collect { |tpart| Entity.new.from_mail(tpart) }
       else
-        set_content @tmail.body # TMail has already decoded it, but we need it still encoded
+        set_content @mail.body # Mail has already decoded it, but we need it still encoded
       end
     end
 
@@ -84,7 +84,7 @@ module MIME
     # Macro Methods #
 
     def multipart?
-      @tmail.multipart?
+      @mail.multipart?
       # !!(headers['content-type'] =~ /multipart\//) if headers['content-type']
     end
     def multipart_type
@@ -95,7 +95,7 @@ module MIME
     # Auto-generates a boundary if one doesn't yet exist.
     def multipart_boundary
       return nil unless multipart?
-      unless @multipart_boundary ||= (@tmail && @tmail.header['content-type'] ? @tmail.header['content-type'].params['boundary'] : nil)
+      unless @multipart_boundary ||= (@mail && @mail.header['content-type'] ? @mail.header['content-type'].params['boundary'] : nil)
         # Content-Type: multipart/mixed; boundary=000e0cd28d1282f4ba04788017e5
         @multipart_boundary = String.random(25)
         headers['content-type'] = "multipart/#{multipart_type}; boundary=#{@multipart_boundary}"
@@ -104,7 +104,7 @@ module MIME
       @multipart_boundary
     end
     def attachment?
-      @tmail.disposition_is_attachment? || headers['content-disposition'] =~ /^form-data;.* filename=[\"\']?[^\"\']+[\"\']?/ if headers['content-disposition']
+      @mail.disposition_is_attachment? || headers['content-disposition'] =~ /^form-data;.* filename=[\"\']?[^\"\']+[\"\']?/ if headers['content-disposition']
     end
     alias :file? :attachment?
     def part_filename
