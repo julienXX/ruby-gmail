@@ -3,7 +3,6 @@ require 'net/smtp'
 require 'smtp_tls'
 
 class Gmail
-  VERSION = '0.0.9'
 
   class NoLabel < RuntimeError; end
 
@@ -35,6 +34,7 @@ class Gmail
   def inbox
     mailbox('inbox')
   end
+
   # Accessor for @imap, but ensures that it's logged in first.
   def imap
     if @imap.disconnected?
@@ -44,6 +44,7 @@ class Gmail
     end
     @imap
   end
+
   # Log out of gmail
   def logout
     @imap.logout unless @imap.disconnected?
@@ -52,7 +53,7 @@ class Gmail
   def create_label(name)
     imap.create(name)
   end
-  
+
   # Get labels list
   def labels
     labels = Array.new
@@ -62,7 +63,7 @@ class Gmail
     end
     return labels
   end
-  
+
   def in_mailbox(mailbox, &block)
     raise ArgumentError, "Must provide a code block" unless block_given?
     mailbox_stack << mailbox
@@ -96,11 +97,11 @@ class Gmail
     end
     puts "SMTP closed."
   end
-  
+
   def new_message
     MIME::Message.generate
   end
-  
+
   def send_email(to, body=nil)
     meta = class << self; self end
     if to.is_a?(MIME::Message)
@@ -114,7 +115,7 @@ class Gmail
       smtp.call to, body
     end
   end
-  
+
   private
     def mailboxes
       @mailboxes ||= {}
